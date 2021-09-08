@@ -1,0 +1,21 @@
+services:
+  mp:
+    secretName: MarketplaceCredentials
+  db:
+    name: magento
+    username: magento
+    network:
+      azCount: 2
+  es:
+    username: magento
+  web:
+    admin:
+      urlPath: admin
+      firstName: Admin
+      lastName: Administrator
+      email: admin@example.com
+      username: admin
+      password: admin123
+    pipeline:
+      source:
+        type: S3
