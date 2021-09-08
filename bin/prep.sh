@@ -26,5 +26,6 @@ if [ "${FS}" == "ext4" ]; then
   sudo resize2fs ${PART}
 fi
 
+# ToDo: Sample may be removed as soon as cdk.context.yaml remains relatively constant.
 # Copy sample CDK context
 cp cdk.context.sample.yaml cdk.context.yaml

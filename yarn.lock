@@ -818,10 +818,10 @@
     "@aws-cdk/aws-s3" "^1.121.0"
     "@aws-cdk/core" "^1.121.0"
 
-"@engr-lynx/cdk-service-patterns@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@engr-lynx/cdk-service-patterns/-/cdk-service-patterns-0.4.0.tgz#ede2c660b0a10c45f32bc4049eae02bf3d329432"
-  integrity sha512-s9Op0dpf41LRh2nTbZr/h+0qpo8+QTslZfZQf5yBV5Z/POuUyuzKIuWdebWSXaBqHyh55sluvDzePxm8CPFGrA==
+"@engr-lynx/cdk-service-patterns@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@engr-lynx/cdk-service-patterns/-/cdk-service-patterns-0.5.0.tgz#515cbf9e901938eb216db8dc18580cec2d1e77a2"
+  integrity sha512-0P37VgFmJdPsnGPe7YtYxURywBzJADcSdC1SOnj2utEQtE7YDo4YYrG+3KxHg7aHxy1gCTqYVFTE1PGsegti3Q==
   dependencies:
     "@aws-cdk/aws-apprunner" "^1.121.0"
     "@aws-cdk/aws-cloudfront" "^1.121.0"

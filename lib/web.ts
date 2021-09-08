@@ -98,6 +98,7 @@ export class Web extends Construct {
           ROLE_ARN=\$(aws iam create-role --role-name ` + roleName + ` --path /service-role/ --assume-role-policy-document file://role.json | jq -r '.Role.Arn')
           POLICY_ARN=\$(aws iam list-policies --path-prefix /service-role/ --scope AWS --policy-usage-filter PermissionsPolicy | jq -r '.Policies[] | select(.PolicyName == "` + policyName + `") | .Arn')
           aws iam attach-role-policy --role-name ` + roleName + ` --policy-arn \${POLICY_ARN}
+          until [ -n "\$(aws iam list-attached-role-policies --role-name ` + roleName + ` | jq '.AttachedPolicies[] | select(.PolicyName == "` + policyName + `")')" ]; do : ; done
         fi
         sed -i "s|{{` + repoUriVarName + `}}|\${` + repoUriVarName + `}|" app.json && sed -i "s|{{ROLE_ARN}}|\${ROLE_ARN}|" app.json
         export BASE_URL=https://\$(aws apprunner create-service --service-name ` + serviceName + ` --source-configuration file://app.json | jq -r .Service.ServiceUrl)
@@ -115,6 +116,7 @@ export class Web extends Construct {
     IamRole.grantList(contProject, this)
     IamRole.grantCreate(contProject, this)
     IamRole.grantAttachPolicy(contProject, this, roleName, true)
+    IamRole.grantListAttachedPolicies(contProject, this, roleName, true)
     IamRole.grantPass(contProject, this, roleName, true)
     IamPolicy.grantList(contProject, this)
     AppRunnerService.grantList(contProject, this)
