@@ -4,8 +4,15 @@ import {
   App,
 } from '@aws-cdk/core'
 import {
+  AppConfig,
+} from '../lib/config'
+import {
   BackEndStack,
 } from '../lib/back-end-stack'
 
 const app = new App()
-new BackEndStack(app, 'BackEndStack')
+const appContext = app.node.tryGetContext('app')
+const appConfig = appContext as AppConfig
+new BackEndStack(app, appConfig.name, {
+  ...appConfig.services,
+})

@@ -17,7 +17,7 @@ export class Mp extends Construct {
 
   constructor(scope: Construct, id: string, mpProps: MpProps) {
     super(scope, id)
-    this.secret = Secret.fromSecretNameV2(this, 'MpCredentials', mpProps.secretName)
+    this.secret = Secret.fromSecretNameV2(this, 'Credentials', mpProps.secretName)
   }
 
 }

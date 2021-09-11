@@ -6,8 +6,8 @@ import {
   CustomResource,
 } from '@aws-cdk/core'
 import {
-  CfnServiceLinkedRole,
-} from '@aws-cdk/aws-iam'
+  DockerImageAsset,
+} from '@aws-cdk/aws-ecr-assets'
 import {
   ISecret,
 } from '@aws-cdk/aws-secretsmanager'
@@ -24,9 +24,8 @@ import {
   Provider,
 } from '@aws-cdk/custom-resources'
 import {
-  AppRunnerService,
-  IamRole,
-  IamPolicy,
+  ImageServiceRunner,
+  RepositoryType,
 } from '@engr-lynx/cdk-service-patterns'
 import {
   buildSourceAction,
@@ -54,24 +53,37 @@ export class Web extends Construct {
       ...webProps.pipeline.source,
       key: 'src.zip',
     }
-    const { action: s3Source, sourceArtifact, source } = buildSourceAction(this, sourceActionProps)
+    const {
+      action: s3Source,
+      sourceArtifact,
+      source,
+    } = buildSourceAction(this, sourceActionProps)
     const bucket = source as Bucket
+    const sourceActions = [
+      s3Source,
+    ]
     const sourceStage = {
       stageName: 'Source',
-      actions: [
-        s3Source,
-      ],
+      actions: sourceActions,
     }
     stages.push(sourceStage)
-    new CfnServiceLinkedRole(this, 'AppRunner', {
-      awsServiceName: 'apprunner.amazonaws.com',
+    const directory = join(__dirname, 'base-image')
+    const baseImage = new DockerImageAsset(this, 'BaseImage', {
+      directory,
     })
-    const repoUriVarName = 'REPO_URI'
+    const imageId = baseImage.imageUri
+    const serviceRunner = new ImageServiceRunner(this, 'ServiceRunner', {
+      repositoryType: RepositoryType.ECR,
+      imageId,
+      port: "80",
+      willAutoDeploy: true,
+    })
     // ToDo: Take these from secrets manager directly. Also store admin credentials on Secrets Manager.
+    const baseUrl = 'https://' + serviceRunner.service.attrServiceUrl
     const inKvArgs = {
       MP_USERNAME: webProps.mpSecret.secretValueFromJson('username').toString(),
       MP_PASSWORD: webProps.mpSecret.secretValueFromJson('password').toString(),
-      BASE_URL: '',
+      BASE_URL: baseUrl,
       ADMIN_URL_PATH: webProps.admin.urlPath,
       ADMIN_FIRSTNAME: webProps.admin.firstName,
       ADMIN_LASTNAME: webProps.admin.lastName,
@@ -86,71 +98,47 @@ export class Web extends Construct {
       ES_USERNAME: webProps.esSecret.secretValueFromJson('username').toString(),
       ES_PASSWORD: webProps.esSecret.secretValueFromJson('password').toString(),
     }
-    const roleName = 'AppRunnerECRAccessRole'
-    const policyName = 'AWSAppRunnerServicePolicyForECRAccess'
-    const serviceName = 'MagentoOnAWS'
-    // ToDo: Create App Runner service and IAM role in this stack and outside CodeBuild. May need php-apache image asset to initially fill ECR. Test deployment and re-deployment.
-    const prebuildCommands = [
-      'SERVICE_ARN=$(aws apprunner list-services | jq -r \'.ServiceSummaryList[] | select(.ServiceName == "' + serviceName + '") | .ServiceArn\')',
-      `if [ -z \${SERVICE_ARN} ]; then
-        ROLE_ARN=\$(aws iam list-roles --path-prefix /service-role/ | jq -r '.Roles[] | select (.RoleName == "` + roleName + `") | .Arn')
-        if [ -z \${ROLE_ARN} ]; then
-          ROLE_ARN=\$(aws iam create-role --role-name ` + roleName + ` --path /service-role/ --assume-role-policy-document file://role.json | jq -r '.Role.Arn')
-          POLICY_ARN=\$(aws iam list-policies --path-prefix /service-role/ --scope AWS --policy-usage-filter PermissionsPolicy | jq -r '.Policies[] | select(.PolicyName == "` + policyName + `") | .Arn')
-          aws iam attach-role-policy --role-name ` + roleName + ` --policy-arn \${POLICY_ARN}
-          until [ -n "\$(aws iam list-attached-role-policies --role-name ` + roleName + ` | jq '.AttachedPolicies[] | select(.PolicyName == "` + policyName + `")')" ]; do : ; done
-        fi
-        sed -i "s|{{` + repoUriVarName + `}}|\${` + repoUriVarName + `}|" app.json && sed -i "s|{{ROLE_ARN}}|\${ROLE_ARN}|" app.json
-        export BASE_URL=https://\$(aws apprunner create-service --service-name ` + serviceName + ` --source-configuration file://app.json | jq -r .Service.ServiceUrl)
-      else
-        export BASE_URL=https://\$(aws apprunner describe-service --service-arn \${SERVICE_ARN} | jq -r .Service.ServiceUrl)
-      fi`,
-    ]
-    const { action: buildAction, grantee: contProject } = buildContBuildAction(this, {
+    const {
+      action: buildAction,
+      contRepo,
+    } = buildContBuildAction(this, {
       ...webProps.pipeline.build,
       inKvArgs,
-      prebuildCommands,
       sourceCode: sourceArtifact,
-      repoUriVarName,
     })
-    IamRole.grantList(contProject, this)
-    IamRole.grantCreate(contProject, this)
-    IamRole.grantAttachPolicy(contProject, this, roleName, true)
-    IamRole.grantListAttachedPolicies(contProject, this, roleName, true)
-    IamRole.grantPass(contProject, this, roleName, true)
-    IamPolicy.grantList(contProject, this)
-    AppRunnerService.grantList(contProject, this)
-    AppRunnerService.grantDescribe(contProject, this, serviceName)
-    AppRunnerService.grantCreate(contProject, this)
+    const buildActions = [
+      buildAction,
+    ]
     const buildStage = {
       stageName: 'Build',
-      actions: [
-        buildAction,
-      ],
+      actions: buildActions,
     }
     stages.push(buildStage)
-    const webPipeline = new Pipeline(this, 'WebPipeline', {
+    const pipeline = new Pipeline(this, 'Pipeline', {
       stages,
       restartExecutionOnUpdate: true,
     })
-    const entry = join(__dirname, 'web-trigger')
-    const onEventHandler = new PythonFunction(this, 'Trigger', {
+    const entry = join(__dirname, 'bootstrap')
+    const onEventHandler = new PythonFunction(this, 'Bootstrap', {
       entry,
     })
+    serviceRunner.service.grantUpdate(onEventHandler)
     bucket.grantPut(onEventHandler)
-    bucket.grantDelete(onEventHandler)
-    const triggerProvider = new Provider(this, 'TriggerProvider', {
+    const bootstrapProvider = new Provider(this, 'BootstrapProvider', {
       onEventHandler,
     })
     const properties = {
-      bucket: bucket.bucketName,
-      key: sourceActionProps.key,
+      serviceArn: serviceRunner.service.attrServiceArn,
+      imageRepo: contRepo.repositoryUri,
+      srcBucket: bucket.bucketName,
+      srcKey: sourceActionProps.key,
     }
-    const triggerResource = new CustomResource(this, 'TriggerResource', {
-      serviceToken: triggerProvider.serviceToken,
+    const bootstrapResource = new CustomResource(this, 'BootstrapResource', {
+      serviceToken: bootstrapProvider.serviceToken,
       properties,
     })
-    triggerResource.node.addDependency(webPipeline)
+    // This custom resource will trigger pipeline. Hence the latter needs to be fully created first.
+    bootstrapResource.node.addDependency(pipeline)
   }
 
 }

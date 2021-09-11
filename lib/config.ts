@@ -39,3 +39,8 @@ export interface ServicesConfig {
   es: EsConfig,
   web: WebConfig,
 }
+
+export interface AppConfig {
+  name: string,
+  services: ServicesConfig,
+}

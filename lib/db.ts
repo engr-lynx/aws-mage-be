@@ -1,5 +1,6 @@
 import {
   Construct,
+  RemovalPolicy,
 } from '@aws-cdk/core'
 import {
   Secret,
@@ -43,7 +44,7 @@ export class Db extends Construct {
       name: 'Public',
       subnetType,
     }
-    const vpc = new Vpc(this, 'DbVpc', {
+    const vpc = new Vpc(this, 'Vpc', {
       maxAzs: dbProps.network.azCount,
       subnetConfiguration: [
         publicSubnetConfig,
@@ -52,7 +53,7 @@ export class Db extends Construct {
     const vpcSubnets = {
       subnetType,
     }
-    const sg = new SecurityGroup(this, 'DbSg', {
+    const sg = new SecurityGroup(this, 'Sg', {
       vpc,
     })
     sg.addIngressRule(Peer.anyIpv4(), Port.tcp(3306))
@@ -72,17 +73,18 @@ export class Db extends Construct {
       secretStringTemplate,
       generateStringKey: 'password',
     }
-    this.secret = new Secret(this, 'DbCredentials', {
+    this.secret = new Secret(this, 'Credentials', {
       generateSecretString,
     })
     const credentials = Credentials.fromSecret(this.secret)
     this.name = dbProps.name
-    const cluster = new DatabaseCluster(this, 'DbCluster', {
+    const cluster = new DatabaseCluster(this, 'Cluster', {
       engine,
       instanceProps,
       instances: 1,
       credentials,
       defaultDatabaseName: this.name,
+      removalPolicy: RemovalPolicy.DESTROY,
     })
     this.host = cluster.clusterEndpoint.hostname
   }

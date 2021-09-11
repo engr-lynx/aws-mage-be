@@ -1,5 +1,6 @@
 import {
   Construct,
+  RemovalPolicy,
 } from '@aws-cdk/core'
 import {
   Domain,
@@ -33,17 +34,18 @@ export class Es extends Construct {
       secretStringTemplate,
       generateStringKey: 'password',
     }
-    this.secret = new Secret(this, 'EsCredentials', {
+    this.secret = new Secret(this, 'Credentials', {
       generateSecretString,
     })
     const fineGrainedAccessControl = {
       masterUserName: this.secret.secretValueFromJson('username').toString(),
       masterUserPassword: this.secret.secretValueFromJson('password'),
     }
-    const domain = new Domain(this, 'EsDomain', {
+    const domain = new Domain(this, 'Domain', {
       version: ElasticsearchVersion.V7_9,
       useUnsignedBasicAuth: true,
       fineGrainedAccessControl,
+      removalPolicy: RemovalPolicy.DESTROY,
     })
     this.host = 'https://' + domain.domainEndpoint
   }

@@ -19,22 +19,22 @@ import {
   ServicesConfig,
 } from './config'
 
+export interface BackEndProps extends StackProps, ServicesConfig {}
+
 export class BackEndStack extends Stack {
-  constructor(scope: Construct, id: string, props?: StackProps) {
-    super(scope, id, props)
-    const servicesContext = this.node.tryGetContext('services')
-    const servicesConfig = servicesContext as ServicesConfig
+  constructor(scope: Construct, id: string, backEndProps: BackEndProps) {
+    super(scope, id, backEndProps)
     const mp = new Mp(this, 'Mp', {
-      ...servicesConfig.mp,
+      ...backEndProps.mp,
     })
     const db = new Db(this, 'Db', {
-      ...servicesConfig.db,
+      ...backEndProps.db,
     })
     const es = new Es(this, 'Es', {
-      ...servicesConfig.es,
+      ...backEndProps.es,
     })
     new Web(this, 'Web', {
-      ...servicesConfig.web,
+      ...backEndProps.web,
       mpSecret: mp.secret,
       dbHost: db.host,
       dbName: db.name,
