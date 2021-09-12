@@ -78,13 +78,14 @@ export class Db extends Construct {
     })
     const credentials = Credentials.fromSecret(this.secret)
     this.name = dbProps.name
+    const removalPolicy = dbProps.deleteWithApp ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     const cluster = new DatabaseCluster(this, 'Cluster', {
       engine,
       instanceProps,
       instances: 1,
       credentials,
       defaultDatabaseName: this.name,
-      removalPolicy: RemovalPolicy.DESTROY,
+      removalPolicy,
     })
     this.host = cluster.clusterEndpoint.hostname
   }

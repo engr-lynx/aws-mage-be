@@ -11,6 +11,7 @@ RUN sed -i "s/{{MP_USERNAME}}/${MP_USERNAME}/" /root/.composer/auth.json \
 # Magento2 workdir
 WORKDIR /var/www/html/magento2
 
+# ToDo: Put deployment of sample data as optional (boolean in config)
 # Deploy Magento2 sample data
 RUN mkdir ./var/composer_home/ \
   && cp /root/.composer/auth.json ./var/composer_home/ \

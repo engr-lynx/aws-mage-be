@@ -41,11 +41,12 @@ export class Es extends Construct {
       masterUserName: this.secret.secretValueFromJson('username').toString(),
       masterUserPassword: this.secret.secretValueFromJson('password'),
     }
+    const removalPolicy = esProps.deleteWithApp ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     const domain = new Domain(this, 'Domain', {
       version: ElasticsearchVersion.V7_9,
       useUnsignedBasicAuth: true,
       fineGrainedAccessControl,
-      removalPolicy: RemovalPolicy.DESTROY,
+      removalPolicy,
     })
     this.host = 'https://' + domain.domainEndpoint
   }

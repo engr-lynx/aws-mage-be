@@ -1,5 +1,5 @@
 import {
-  DeployableConfig,
+  DeployableAppConfig,
 } from '@engr-lynx/cdk-pipeline-builder'
 
 export interface MpConfig {
@@ -13,11 +13,13 @@ export interface NetworkConfig {
 export interface DbConfig {
   name: string,
   username: string,
+  deleteWithApp: boolean,
   network: NetworkConfig,
 }
 
 export interface EsConfig {
   username: string,
+  deleteWithApp: boolean,
 }
 
 interface AdminConfig {
@@ -29,7 +31,7 @@ interface AdminConfig {
   password: string,
 }
 
-export interface WebConfig extends DeployableConfig {
+export interface WebConfig extends DeployableAppConfig {
   admin: AdminConfig,
 }
 

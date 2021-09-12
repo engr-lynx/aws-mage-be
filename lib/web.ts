@@ -28,8 +28,8 @@ import {
   RepositoryType,
 } from '@engr-lynx/cdk-service-patterns'
 import {
-  buildSourceAction,
-  buildContBuildAction,
+  createSourceAction,
+  createImageBuildAction,
 } from '@engr-lynx/cdk-pipeline-builder'
 import {
   WebConfig,
@@ -46,6 +46,11 @@ export interface WebProps extends WebConfig {
 
 export class Web extends Construct {
 
+  // ToDo: Split the process into: (1) bootstrap pipeline that creates the project and (2) standard CI/CD pipeline that builds and deploys it.
+  // ToDo: Separate service runner creation from the creation of the pipelines.
+  // ToDo: Is there a way to self-destroy bootstrap pipeline after successful execution?
+  // ToDo: Transfer update_service_image_id to end of bootstrap pipeline to make sure ECR already has an image.
+  // !ToDo: S3 deletion policy
   constructor(scope: Construct, id: string, webProps: WebProps) {
     super(scope, id)
     const stages = []
@@ -55,9 +60,9 @@ export class Web extends Construct {
     }
     const {
       action: s3Source,
-      sourceArtifact,
+      sourceArtifact: sourceCode,
       source,
-    } = buildSourceAction(this, sourceActionProps)
+    } = createSourceAction(this, sourceActionProps)
     const bucket = source as Bucket
     const sourceActions = [
       s3Source,
@@ -78,11 +83,9 @@ export class Web extends Construct {
       port: "80",
       willAutoDeploy: true,
     })
-    // ToDo: Take these from secrets manager directly. Also store admin credentials on Secrets Manager.
+    // !ToDo: Put store admin credentials on Secrets Manager.
     const baseUrl = 'https://' + serviceRunner.service.attrServiceUrl
-    const inKvArgs = {
-      MP_USERNAME: webProps.mpSecret.secretValueFromJson('username').toString(),
-      MP_PASSWORD: webProps.mpSecret.secretValueFromJson('password').toString(),
+    const inEnvVarArgs = {
       BASE_URL: baseUrl,
       ADMIN_URL_PATH: webProps.admin.urlPath,
       ADMIN_FIRSTNAME: webProps.admin.firstName,
@@ -92,20 +95,29 @@ export class Web extends Construct {
       ADMIN_PASSWORD: webProps.admin.password, 
       DB_HOST: webProps.dbHost,
       DB_NAME: webProps.dbName,
-      DB_USERNAME: webProps.dbSecret.secretValueFromJson('username').toString(),
-      DB_PASSWORD: webProps.dbSecret.secretValueFromJson('password').toString(),
       ES_HOST: webProps.esHost,
-      ES_USERNAME: webProps.esSecret.secretValueFromJson('username').toString(),
-      ES_PASSWORD: webProps.esSecret.secretValueFromJson('password').toString(),
+    }
+    const inEnvSecretArgs = {
+      MP_USERNAME: webProps.mpSecret.secretName + ':username',
+      MP_PASSWORD: webProps.mpSecret.secretName + ':password',
+      DB_USERNAME: webProps.dbSecret.secretName + ':username',
+      DB_PASSWORD: webProps.dbSecret.secretName + ':password',
+      ES_USERNAME: webProps.esSecret.secretName + ':username',
+      ES_PASSWORD: webProps.esSecret.secretName + ':password',
     }
     const {
       action: buildAction,
-      contRepo,
-    } = buildContBuildAction(this, {
+      imageRepo,
+      grantee,
+    } = createImageBuildAction(this, {
       ...webProps.pipeline.build,
-      inKvArgs,
-      sourceCode: sourceArtifact,
+      inEnvVarArgs,
+      inEnvSecretArgs,
+      sourceCode,
     })
+    webProps.mpSecret.grantRead(grantee)
+    webProps.dbSecret.grantRead(grantee)
+    webProps.esSecret.grantRead(grantee)
     const buildActions = [
       buildAction,
     ]
@@ -118,10 +130,12 @@ export class Web extends Construct {
       stages,
       restartExecutionOnUpdate: true,
     })
+    // ToDo: Put PythonFunction + Provider + CustomResource in a module.
     const entry = join(__dirname, 'bootstrap')
     const onEventHandler = new PythonFunction(this, 'Bootstrap', {
       entry,
     })
+    // ToDo: Aggregate grants to read, write and read-write
     serviceRunner.service.grantUpdate(onEventHandler)
     bucket.grantPut(onEventHandler)
     const bootstrapProvider = new Provider(this, 'BootstrapProvider', {
@@ -129,7 +143,7 @@ export class Web extends Construct {
     })
     const properties = {
       serviceArn: serviceRunner.service.attrServiceArn,
-      imageRepo: contRepo.repositoryUri,
+      imageRepo: imageRepo.repositoryUri,
       srcBucket: bucket.bucketName,
       srcKey: sourceActionProps.key,
     }

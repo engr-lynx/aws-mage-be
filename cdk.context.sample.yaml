@@ -6,10 +6,12 @@ app:
     db:
       name: magento
       username: magento
+      deleteWithApp: true
       network:
         azCount: 2
     es:
       username: magento
+      deleteWithApp: true
     web:
       admin:
         urlPath: admin
@@ -21,3 +23,5 @@ app:
       pipeline:
         source:
           type: S3
+        build:
+          deleteRepoWithApp: true
