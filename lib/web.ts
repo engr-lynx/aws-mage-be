@@ -30,6 +30,7 @@ import {
 import {
   createSourceAction,
   createImageBuildAction,
+  createPipeline,
 } from '@engr-lynx/cdk-pipeline-builder'
 import {
   WebConfig,
@@ -50,7 +51,6 @@ export class Web extends Construct {
   // ToDo: Separate service runner creation from the creation of the pipelines.
   // ToDo: Is there a way to self-destroy bootstrap pipeline after successful execution?
   // ToDo: Transfer update_service_image_id to end of bootstrap pipeline to make sure ECR already has an image.
-  // !ToDo: S3 deletion policy
   constructor(scope: Construct, id: string, webProps: WebProps) {
     super(scope, id)
     const stages = []
@@ -126,7 +126,8 @@ export class Web extends Construct {
       actions: buildActions,
     }
     stages.push(buildStage)
-    const pipeline = new Pipeline(this, 'Pipeline', {
+    const pipeline = createPipeline(this, {
+      ...webProps.pipeline,
       stages,
       restartExecutionOnUpdate: true,
     })
@@ -138,7 +139,7 @@ export class Web extends Construct {
     // ToDo: Aggregate grants to read, write and read-write
     serviceRunner.service.grantUpdate(onEventHandler)
     bucket.grantPut(onEventHandler)
-    const bootstrapProvider = new Provider(this, 'BootstrapProvider', {
+    const provider = new Provider(this, 'BootstrapProvider', {
       onEventHandler,
     })
     const properties = {
@@ -148,7 +149,7 @@ export class Web extends Construct {
       srcKey: sourceActionProps.key,
     }
     const bootstrapResource = new CustomResource(this, 'BootstrapResource', {
-      serviceToken: bootstrapProvider.serviceToken,
+      serviceToken: provider.serviceToken,
       properties,
     })
     // This custom resource will trigger pipeline. Hence the latter needs to be fully created first.

@@ -791,10 +791,10 @@
   dependencies:
     "@cspotcode/source-map-consumer" "0.8.0"
 
-"@engr-lynx/cdk-pipeline-builder@^0.6.1":
-  version "0.6.1"
-  resolved "https://registry.yarnpkg.com/@engr-lynx/cdk-pipeline-builder/-/cdk-pipeline-builder-0.6.1.tgz#883c3ab7d497ec8ea931312c244c7e2ecfcf41b1"
-  integrity sha512-wRCp80s/fa8AQ5wYxJAbEdNKilZBE2hfEd0HYr7B/nd0l/lsOmr7cxlJqUeEuqiRt3rZJJtFmR5AE0ZlsUOziA==
+"@engr-lynx/cdk-pipeline-builder@^0.8.2":
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/@engr-lynx/cdk-pipeline-builder/-/cdk-pipeline-builder-0.8.2.tgz#f7199972845ea34c72c7819ff83374cc1d0b926b"
+  integrity sha512-Tg9FzVaxNBrmOyG6ncDmUU26K+UwJjtPK6XUQXxn1bJFjmD8gp/Cp9gfEy78sXvD2/h7pr3oNgz1pFGCjXqH/A==
   dependencies:
     "@aws-cdk/aws-codebuild" "^1.122.0"
     "@aws-cdk/aws-codecommit" "^1.122.0"

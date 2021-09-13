@@ -21,7 +21,9 @@ app:
         username: admin
         password: admin123
       pipeline:
+        deleteArtifactsWithApp: true
         source:
           type: S3
+          deleteSourceWithApp: true
         build:
           deleteRepoWithApp: true
