@@ -88,6 +88,7 @@ export class Web extends Construct {
       DB_NAME: webProps.dbName,
       ES_HOST: webProps.esHost,
     }
+    const adminSecret = Secret.fromSecretNameV2(this, 'AdminDetails', webProps.admin.secretName)
     const inEnvSecretArgs = {
       DB_USERNAME: webProps.dbSecret.secretName + ':username',
       DB_PASSWORD: webProps.dbSecret.secretName + ':password',
@@ -95,12 +96,12 @@ export class Web extends Construct {
       ES_PASSWORD: webProps.esSecret.secretName + ':password',
       MP_USERNAME: webProps.mpSecret.secretName + ':username',
       MP_PASSWORD: webProps.mpSecret.secretName + ':password',
-      ADMIN_FIRSTNAME: webProps.admin.secretName + ':firstName',
-      ADMIN_LASTNAME: webProps.admin.secretName + ':lastName',
-      ADMIN_EMAIL: webProps.admin.secretName + ':email',
-      ADMIN_URL_PATH: webProps.admin.secretName + ':urlPath',
-      ADMIN_USERNAME: webProps.admin.secretName + ':username',
-      ADMIN_PASSWORD: webProps.admin.secretName + ':password',
+      ADMIN_FIRSTNAME: adminSecret.secretName + ':firstName',
+      ADMIN_LASTNAME: adminSecret.secretName + ':lastName',
+      ADMIN_EMAIL: adminSecret.secretName + ':email',
+      ADMIN_URL_PATH: adminSecret.secretName + ':urlPath',
+      ADMIN_USERNAME: adminSecret.secretName + ':username',
+      ADMIN_PASSWORD: adminSecret.secretName + ':password',
     }
     const {
       action: buildAction,
@@ -112,9 +113,10 @@ export class Web extends Construct {
       inEnvSecretArgs,
       sourceCode,
     })
-    webProps.mpSecret.grantRead(grantee)
     webProps.dbSecret.grantRead(grantee)
     webProps.esSecret.grantRead(grantee)
+    webProps.mpSecret.grantRead(grantee)
+    adminSecret.grantRead(grantee)
     const buildActions = [
       buildAction,
     ]

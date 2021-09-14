@@ -38,7 +38,7 @@ read -p "Enter your Magento Marketplace private key: " MP_PASSWORD
 if [ -z "${MP_PASSWORD}" ]; then
   exit 1
 fi
-
+echo
 echo "Please review that the following are correct. Proceed? (y/n): "
 echo "your first name: ${ADMIN_FIRST_NAME}"
 echo "your last name: ${ADMIN_LAST_NAME}"
@@ -59,13 +59,41 @@ npm install -g yarn
 yarn global add --force aws-cdk
 
 # Grow storage
-CF_NAME=$(aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE | jq -r --arg C9_NAME ${C9_NAME} '.StackSummaries[] | select(.StackName | contains($C9_NAME)) | .StackName')
-EC2_ID=$(aws cloudformation list-stack-resources --stack-name ${CF_NAME} | jq -r '.StackResourceSummaries[] | select(.LogicalResourceId == "Instance") | .PhysicalResourceId')
-VOL_ID=$(aws ec2 describe-instances --instance-ids ${EC2_ID} | jq -r '.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId')
-aws ec2 modify-volume --volume-id ${VOL_ID} --size 50
+SIZE_TARGET=20
+CF_NAME=$( \
+  aws cloudformation list-stacks --stack-status-filter CREATE_COMPLETE \
+  | jq -r \
+    --arg C9_NAME ${C9_NAME} \
+    '.StackSummaries[] | select(.StackName | contains($C9_NAME)) | .StackName' \
+)
+EC2_ID=$( \
+  aws cloudformation list-stack-resources --stack-name ${CF_NAME} \
+  | jq -r \
+    '.StackResourceSummaries[] | select(.LogicalResourceId == "Instance") | .PhysicalResourceId' \
+)
+VOL_ID=$( \
+  aws ec2 describe-instances --instance-ids ${EC2_ID} \
+  | jq -r \
+    '.Reservations[0].Instances[0].BlockDeviceMappings[0].Ebs.VolumeId' \
+)
+VOL_SIZE=$( \
+  aws ec2 describe-volumes --volume-ids ${VOL_ID} \
+  | jq -r \
+    --arg VOL_ID "${VOL_ID}" \
+    '.Volumes[] | select(.VolumeId == $VOL_ID) | .Size' \
+)
+if [ ${VOL_SIZE} -lt ${SIZE_TARGET} ]; then
+  aws ec2 modify-volume --volume-id ${VOL_ID} --size ${SIZE_TARGET}
+  until [ \
+    $( \
+      aws ec2 describe-volumes-modifications --volume-id ${VOL_ID} \
+      | jq -r \
+        '.VolumesModifications[0].ModificationState' \
+    ) == "optimizing" \
+  ]; do : ; done
+fi
 
 # Use storage
-until [ $(aws ec2 describe-volumes-modifications --volume-id ${VOL_ID} | jq -r '.VolumesModifications[0].ModificationState') == "optimizing" ]; do : ; done
 DEV="/dev/nvme0n1"
 PART=${DEV}"p1"
 FS=$(df -hT | grep ${PART} | awk '{ print $2 }')
@@ -82,13 +110,22 @@ yarn
 npx yaml2json cdk.context.yaml > cdk.context.json
 
 SECRET_FILE=secret.json
-SECRET_NAME=$(cat cdk.context.json | jq -r '.app.services.mp.secretName')
+SECRET_NAME=$( \
+  cat cdk.context.json \
+  | jq -r \
+    '.app.services.mp.secretName' \
+  )
 jq --null-input \
   --arg username "${MP_USERNAME}" \
   --arg password "${MP_PASSWORD}" \
   '{"username": $username, "password": $password}' \
   > ${SECRET_FILE}
-SECRET=$(aws secretsmanager list-secrets | jq -r --arg name "${SECRET_NAME}" '.SecretList[] | select(.Name == $name)')
+SECRET=$( \
+  aws secretsmanager list-secrets \
+  | jq -r \
+    --arg name "${SECRET_NAME}" \
+    '.SecretList[] | select(.Name == $name)' \
+)
 if [ -z "${SECRET}" ]; then
   aws secretsmanager create-secret --name ${SECRET_NAME} --secret-string file://${SECRET_FILE}
 else
@@ -97,7 +134,11 @@ fi
 rm -f ${SECRET_FILE}
 
 SECRET_FILE=secret.json
-SECRET_NAME=$(cat cdk.context.json | jq -r '.app.services.web.admin.secretName')
+SECRET_NAME=$( \
+  cat cdk.context.json \
+  | jq -r \
+    '.app.services.web.admin.secretName' \
+)
 jq --null-input \
   --arg firstName "${ADMIN_FIRST_NAME}" \
   --arg lastName "${ADMIN_LAST_NAME}" \
@@ -107,7 +148,12 @@ jq --null-input \
   --arg password "${ADMIN_PASSWORD}" \
   '{"firstName": $firstName, "lastName": $lastName, "email": $email, "urlPath": $urlPath, "username": $username, "password": $password}' \
   > ${SECRET_FILE}
-SECRET=$(aws secretsmanager list-secrets | jq -r --arg name "${SECRET_NAME}" '.SecretList[] | select(.Name == $name)')
+SECRET=$( \
+  aws secretsmanager list-secrets \
+  | jq -r \
+    --arg name "${SECRET_NAME}" \
+    '.SecretList[] | select(.Name == $name)' \
+)
 if [ -z "${SECRET}" ]; then
   aws secretsmanager create-secret --name ${SECRET_NAME} --secret-string file://${SECRET_FILE}
 else
@@ -115,7 +161,10 @@ else
 fi
 rm -f ${SECRET_FILE}
 
-export ACCOUNT=$(aws sts get-caller-identity | jq -r .Account)
+export ACCOUNT=$( \
+  aws sts get-caller-identity \
+  | jq -r .Account \
+)
 export REGION=$(aws configure get region)
 cdk bootstrap aws://${ACCOUNT}/${REGION}
 cdk deploy --require-approval never
