@@ -1,45 +1,39 @@
 # Prompt user for required info
 C9_NAME=C9forSS
-read -p "Enter Cloud9 environment name (${C9_NAME}): " REPLY
+read -p "Enter Cloud9 environment name (default: ${C9_NAME}): " REPLY
 if [ -n "${REPLY}" ]; then
   C9_NAME=${REPLY}
 fi
-read -p "Enter your first name: " ADMIN_FIRST_NAME
-if [ -z "${ADMIN_FIRST_NAME}" ]; then
-  exit 1
-fi
-read -p "Enter your last name: " ADMIN_LAST_NAME
-if [ -z "${ADMIN_LAST_NAME}" ]; then
-  exit 1
-fi
-read -p "Enter your email address: " ADMIN_EMAIL
-if [ -z "${ADMIN_EMAIL}" ]; then
-  exit 1
-fi
+while [ -z "${ADMIN_FIRST_NAME}" ]; do
+  read -p "Enter your first name: " ADMIN_FIRST_NAME
+done
+while [ -z "${ADMIN_LAST_NAME}" ]; do
+  read -p "Enter your last name: " ADMIN_LAST_NAME
+done
+while [ -z "${ADMIN_EMAIL}" ]; do
+  read -p "Enter your email address: " ADMIN_EMAIL
+done
 ADMIN_URL_PATH=admin
-read -p "Enter your desired URL path for the store back-end (${ADMIN_URL_PATH}): " REPLY
+read -p "Enter your desired URL path for the store back-end (default: ${ADMIN_URL_PATH}): " REPLY
 if [ -n "${REPLY}" ]; then
   ADMIN_URL_PATH=${REPLY}
 fi
 ADMIN_USERNAME=admin
-read -p "Enter your desired admin username for the store back-end (${ADMIN_USERNAME}): " REPLY
+read -p "Enter your desired admin username for the store back-end (default: ${ADMIN_USERNAME}): " REPLY
 if [ -n "${REPLY}" ]; then
   ADMIN_USERNAME=${REPLY}
 fi
-read -p "Enter your desired admin password for the store back-end: " ADMIN_PASSWORD
-if [ -z "${ADMIN_PASSWORD}" ]; then
-  exit 1
-fi
-read -p "Enter your Magento Marketplace public key: " MP_USERNAME
-if [ -z "${MP_USERNAME}" ]; then
-  exit 1
-fi
-read -p "Enter your Magento Marketplace private key: " MP_PASSWORD
-if [ -z "${MP_PASSWORD}" ]; then
-  exit 1
-fi
+while [ -z "${ADMIN_PASSWORD}" ]; do
+  read -p "Enter your desired admin password for the store back-end: " ADMIN_PASSWORD
+done
+while [ -z "${MP_USERNAME}" ]; do
+  read -p "Enter your Magento Marketplace public key: " MP_USERNAME
+done
+while [ -z "${MP_PASSWORD}" ]; do
+  read -p "Enter your Magento Marketplace private key: " MP_PASSWORD
+done
 echo
-echo "Please review that the following are correct. Proceed? (y/n): "
+echo "Please review that the following are correct."
 echo "your first name: ${ADMIN_FIRST_NAME}"
 echo "your last name: ${ADMIN_LAST_NAME}"
 echo "your email address: ${ADMIN_EMAIL}"
@@ -48,10 +42,15 @@ echo "store back-end admin username: ${ADMIN_USERNAME}"
 echo "store back-end admin password: ${ADMIN_PASSWORD}"
 echo "Magento Marketplace public key: ${MP_USERNAME}"
 echo "Magento Marketplace private key: ${MP_PASSWORD}"
-read -n 1 REPLY
-if [ "${REPLY}" != 'y' ]; then
-  exit 1
-fi
+while [ "${PROCEED}" != 'y' ]; do
+  read -p "Proceed? (y/n): " PROCEED
+  if [ "${PROCEED}" != 'y' ]; then
+    read -p "You'll be exited. You can rerun the script though. Are you sure you don't want to proceed? (y/n)" CONFIRM
+    if [ "${CONFIRM}" == 'y' ]; then
+      exit 1
+    fi
+  fi
+done
 
 # Install dependencies
 sudo yum -y install jq
@@ -90,7 +89,9 @@ if [ ${VOL_SIZE} -lt ${SIZE_TARGET} ]; then
       | jq -r \
         '.VolumesModifications[0].ModificationState' \
     ) == "optimizing" \
-  ]; do : ; done
+  ]; do
+    sleep 1
+  done
 fi
 
 # Use storage

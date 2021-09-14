@@ -1,13 +1,21 @@
 FROM public.ecr.aws/z0z6r0u2/magento2-php-apache:latest
 
-# !ToDo: Retry parts which may potentially fail due to 3rd party (create-project & sampledata:deploy)
 # Create Magento2 project
 ARG MP_USERNAME
 ARG MP_PASSWORD
 COPY ./conf/auth.json /root/.composer/
 RUN sed -i "s/{{MP_USERNAME}}/${MP_USERNAME}/" /root/.composer/auth.json \
   && sed -i "s/{{MP_PASSWORD}}/${MP_PASSWORD}/" /root/.composer/auth.json \
-  && composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition magento2
+  && RETRIES=3; SLEEP=3; i=0; \
+  while [ ${i} -lt ${RETRIES} ]; do \
+    composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition magento2; \
+    RES=$?; \
+    if [ ${RES} -eq 0 ]; then \
+      break; \
+    fi; \
+    i=$((i+1)); \
+    sleep ${SLEEP}; \
+  done && return ${RES}
 
 # Magento2 workdir
 WORKDIR /var/www/html/magento2
@@ -16,7 +24,16 @@ WORKDIR /var/www/html/magento2
 # Deploy Magento2 sample data
 RUN mkdir ./var/composer_home/ \
   && cp /root/.composer/auth.json ./var/composer_home/ \
-  && bin/magento sampledata:deploy
+  && RETRIES=3; SLEEP=3; i=0; \
+  while [ ${i} -lt ${RETRIES} ]; do \
+    bin/magento sampledata:deploy; \
+    RES=$?; \
+    if [ ${RES} -eq 0 ]; then \
+      break; \
+    fi; \
+    i=$((i+1)); \
+    sleep ${SLEEP}; \
+  done && return ${RES}
 
 # Install Magento2
 ARG BASE_URL
