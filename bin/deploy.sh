@@ -4,13 +4,25 @@ read -p "Enter Cloud9 environment name (default: ${C9_NAME}): " REPLY
 if [ -n "${REPLY}" ]; then
   C9_NAME=${REPLY}
 fi
+read -p "Enter your first name: " ADMIN_FIRST_NAME
 while [ -z "${ADMIN_FIRST_NAME}" ]; do
+  echo "This is required."
   read -p "Enter your first name: " ADMIN_FIRST_NAME
 done
+read -p "Enter your last name: " ADMIN_LAST_NAME
 while [ -z "${ADMIN_LAST_NAME}" ]; do
+  echo "This is required."
   read -p "Enter your last name: " ADMIN_LAST_NAME
 done
-while [ -z "${ADMIN_EMAIL}" ]; do
+EMAIL_REGEX="^(([A-Za-z0-9]+((\.|\-|\_|\+)?[A-Za-z0-9]?)*[A-Za-z0-9]+)|[A-Za-z0-9]+)@(([A-Za-z0-9]+)+((\.|\-|\_)?([A-Za-z0-9]+)+)*)+\.([A-Za-z]{2,})+$"
+read -p "Enter your email address: " ADMIN_EMAIL
+while [ -z "${ADMIN_EMAIL}" ] || [ ! ${ADMIN_EMAIL} =~ ${EMAIL_REGEX} ]; do
+  if [ -z "${ADMIN_EMAIL}" ]; then
+    echo "This is required."
+  fi
+  if [ ! ${ADMIN_EMAIL} =~ ${EMAIL_REGEX} ]; then
+    echo "invalid email"
+  fi
   read -p "Enter your email address: " ADMIN_EMAIL
 done
 ADMIN_URL_PATH=admin
@@ -23,13 +35,36 @@ read -p "Enter your desired admin username for the store back-end (default: ${AD
 if [ -n "${REPLY}" ]; then
   ADMIN_USERNAME=${REPLY}
 fi
-while [ -z "${ADMIN_PASSWORD}" ]; do
+ADMIN_PASSWORD_REGEX="^(?=.*\d)(?=.*[a-zA-Z]).{7,}$"
+read -p "Enter your desired admin password for the store back-end: " ADMIN_PASSWORD
+while [ -z "${ADMIN_PASSWORD}" ] || [ ! ${ADMIN_PASSWORD} =~ ${ADMIN_PASSWORD_REGEX} ]; do
+  if [ -z "${ADMIN_PASSWORD}" ]; then
+    echo "This is required."
+  fi
+  if [ ! ${ADMIN_PASSWORD} =~ ${ADMIN_PASSWORD_REGEX} ]; then
+    echo "Password must be at least 7 characters long and include at least one alphabetic and one numeric character."
+  fi
   read -p "Enter your desired admin password for the store back-end: " ADMIN_PASSWORD
 done
-while [ -z "${MP_USERNAME}" ]; do
+MP_KEY_REGEX="^[a-f0-9]{32}$"
+read -p "Enter your Magento Marketplace public key: " MP_USERNAME
+while [ -z "${MP_USERNAME}" ] || [ ! ${MP_USERNAME} =~ ${MP_KEY_REGEX} ]; do
+  if [ -z "${MP_USERNAME}" ]; then
+    echo "This is required."
+  fi
+  if [ ! ${MP_USERNAME} =~ ${MP_KEY_REGEX} ]; then
+    echo "invalid Magento Marketplace key"
+  fi
   read -p "Enter your Magento Marketplace public key: " MP_USERNAME
 done
-while [ -z "${MP_PASSWORD}" ]; do
+read -p "Enter your Magento Marketplace private key: " MP_PASSWORD
+while [ -z "${MP_PASSWORD}" ] || [ ! ${MP_PASSWORD} =~ ${MP_KEY_REGEX} ]; do
+  if [ -z "${MP_PASSWORD}" ]; then
+    echo "This is required."
+  fi
+  if [ ! ${MP_PASSWORD} =~ ${MP_KEY_REGEX} ]; then
+    echo "invalid Magento Marketplace key"
+  fi
   read -p "Enter your Magento Marketplace private key: " MP_PASSWORD
 done
 echo

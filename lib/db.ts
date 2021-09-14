@@ -34,7 +34,7 @@ export class Db extends Construct {
   constructor(scope: Construct, id: string, dbProps: DbProps) {
     super(scope, id)
     // ToDo: Use ServerlessCluster?!
-    // ToDo: Right-size DB instance.
+    // ToDo: Right-size DB instance (to db.t4g.medium).
     // ToDo: Does using the default VPC hasten the build?
     // ToDo: Minimize the VPC.
     const engine = DatabaseClusterEngine.auroraMysql({

@@ -49,6 +49,7 @@ export class Web extends Construct {
   // ToDo: Separate service runner creation from the creation of the pipelines.
   // ToDo: Is there a way to self-destroy bootstrap pipeline after successful execution?
   // ToDo: Transfer update_service_image_id to end of bootstrap pipeline to make sure ECR already has an image.
+  // ToDo: Right-size App Runner instance (to 1 vCPU & 2GB).
   constructor(scope: Construct, id: string, webProps: WebProps) {
     super(scope, id)
     const stages = []
@@ -75,6 +76,7 @@ export class Web extends Construct {
       directory,
     })
     const imageId = baseImage.imageUri
+    // ToDo: Allow other settings.
     const serviceRunner = new ImageServiceRunner(this, 'ServiceRunner', {
       repositoryType: RepositoryType.ECR,
       imageId,
