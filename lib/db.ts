@@ -35,6 +35,7 @@ export class Db extends Construct {
     super(scope, id)
     // ToDo: Use ServerlessCluster?!
     // ToDo: Right-size DB instance.
+    // ToDo: Does using the default VPC hasten the build?
     // ToDo: Minimize the VPC.
     const engine = DatabaseClusterEngine.auroraMysql({
       version: AuroraMysqlEngineVersion.of('5.7.mysql_aurora.2.09.2'),

@@ -23,12 +23,7 @@ export interface EsConfig {
 }
 
 interface AdminConfig {
-  urlPath: string,
-  firstName: string,
-  lastName: string,
-  email: string,
-  username: string,
-  password: string,
+  secretName: string,
 }
 
 export interface WebConfig extends DeployableAppConfig {

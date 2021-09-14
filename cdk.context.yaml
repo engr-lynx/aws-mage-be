@@ -2,7 +2,7 @@ app:
   name: Magento
   services:
     mp:
-      secretName: MarketplaceCredentials
+      secretName: MagentoMarketplaceCredentials
     db:
       name: magento
       username: magento
@@ -14,12 +14,7 @@ app:
       deleteWithApp: true
     web:
       admin:
-        urlPath: admin
-        firstName: Admin
-        lastName: Administrator
-        email: admin@example.com
-        username: admin
-        password: admin123
+        secretName: MagentoAdminDetails
       pipeline:
         deleteArtifactsWithApp: true
         source:

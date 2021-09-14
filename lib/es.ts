@@ -24,7 +24,9 @@ export class Es extends Construct {
   constructor(scope: Construct, id: string, esProps: EsProps) {
     super(scope, id)
     // ToDo: Use application autoscaling?!
-    // ToDo: Right-size ES instance.
+    // ToDo: Right-size ES instance. Does this hasten the build?
+    // ToDo: Does using a VPC (esp default) hasten the build?
+    // ToDo: Does useUnsignedBasicAuth make the build slower? 
     const secretStringTemplate = JSON.stringify({
       username: esProps.username,
     })

@@ -1,5 +1,6 @@
 FROM public.ecr.aws/z0z6r0u2/magento2-php-apache:latest
 
+# !ToDo: Retry parts which may potentially fail due to 3rd party (create-project & sampledata:deploy)
 # Create Magento2 project
 ARG MP_USERNAME
 ARG MP_PASSWORD

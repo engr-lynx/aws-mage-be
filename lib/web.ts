@@ -9,11 +9,9 @@ import {
   DockerImageAsset,
 } from '@aws-cdk/aws-ecr-assets'
 import {
+  Secret,
   ISecret,
 } from '@aws-cdk/aws-secretsmanager'
-import {
-  Pipeline,
-} from '@aws-cdk/aws-codepipeline'
 import {
   PythonFunction,
 } from '@aws-cdk/aws-lambda-python'
@@ -83,27 +81,26 @@ export class Web extends Construct {
       port: "80",
       willAutoDeploy: true,
     })
-    // !ToDo: Put store admin credentials on Secrets Manager.
     const baseUrl = 'https://' + serviceRunner.service.attrServiceUrl
     const inEnvVarArgs = {
       BASE_URL: baseUrl,
-      ADMIN_URL_PATH: webProps.admin.urlPath,
-      ADMIN_FIRSTNAME: webProps.admin.firstName,
-      ADMIN_LASTNAME: webProps.admin.lastName,
-      ADMIN_EMAIL: webProps.admin.email,
-      ADMIN_USERNAME: webProps.admin.username,
-      ADMIN_PASSWORD: webProps.admin.password, 
       DB_HOST: webProps.dbHost,
       DB_NAME: webProps.dbName,
       ES_HOST: webProps.esHost,
     }
     const inEnvSecretArgs = {
-      MP_USERNAME: webProps.mpSecret.secretName + ':username',
-      MP_PASSWORD: webProps.mpSecret.secretName + ':password',
       DB_USERNAME: webProps.dbSecret.secretName + ':username',
       DB_PASSWORD: webProps.dbSecret.secretName + ':password',
       ES_USERNAME: webProps.esSecret.secretName + ':username',
       ES_PASSWORD: webProps.esSecret.secretName + ':password',
+      MP_USERNAME: webProps.mpSecret.secretName + ':username',
+      MP_PASSWORD: webProps.mpSecret.secretName + ':password',
+      ADMIN_FIRSTNAME: webProps.admin.secretName + ':firstName',
+      ADMIN_LASTNAME: webProps.admin.secretName + ':lastName',
+      ADMIN_EMAIL: webProps.admin.secretName + ':email',
+      ADMIN_URL_PATH: webProps.admin.secretName + ':urlPath',
+      ADMIN_USERNAME: webProps.admin.secretName + ':username',
+      ADMIN_PASSWORD: webProps.admin.secretName + ':password',
     }
     const {
       action: buildAction,
@@ -131,7 +128,7 @@ export class Web extends Construct {
       stages,
       restartExecutionOnUpdate: true,
     })
-    // ToDo: Put PythonFunction + Provider + CustomResource in a module.
+    // !ToDo: Put PythonFunction + Provider + CustomResource in a module. Then, remove dependencies @aws-cdk/aws-lambda-python and @aws-cdk/custom-resources.
     const entry = join(__dirname, 'bootstrap')
     const onEventHandler = new PythonFunction(this, 'Bootstrap', {
       entry,
