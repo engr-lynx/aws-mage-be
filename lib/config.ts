@@ -3,41 +3,41 @@ import {
 } from '@engr-lynx/cdk-pipeline-builder'
 
 export interface MpConfig {
-  secretName: string,
+  readonly secretName: string,
 }
 
 export interface NetworkConfig {
-  azCount?: number,
+  readonly azCount?: number,
 }
 
 export interface DbConfig {
-  name: string,
-  username: string,
-  deleteWithApp: boolean,
-  network: NetworkConfig,
+  readonly name: string,
+  readonly username: string,
+  readonly deleteWithApp: boolean,
+  readonly network: NetworkConfig,
 }
 
 export interface EsConfig {
-  username: string,
-  deleteWithApp: boolean,
+  readonly username: string,
+  readonly deleteWithApp: boolean,
 }
 
 interface AdminConfig {
-  secretName: string,
+  readonly secretName: string,
 }
 
 export interface WebConfig extends DeployableAppConfig {
-  admin: AdminConfig,
+  readonly admin: AdminConfig,
 }
 
 export interface ServicesConfig {
-  mp: MpConfig,
-  db: DbConfig,
-  es: EsConfig,
-  web: WebConfig,
+  readonly mp: MpConfig,
+  readonly db: DbConfig,
+  readonly es: EsConfig,
+  readonly web: WebConfig,
 }
 
 export interface AppConfig {
-  name: string,
-  services: ServicesConfig,
+  readonly name: string,
+  readonly services: ServicesConfig,
 }

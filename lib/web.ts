@@ -3,7 +3,6 @@ import {
 } from 'path'
 import {
   Construct,
-  CustomResource,
 } from '@aws-cdk/core'
 import {
   DockerImageAsset,
@@ -13,21 +12,16 @@ import {
   ISecret,
 } from '@aws-cdk/aws-secretsmanager'
 import {
-  PythonFunction,
-} from '@aws-cdk/aws-lambda-python'
-import {
   Bucket,
 } from '@aws-cdk/aws-s3'
 import {
-  Provider,
-} from '@aws-cdk/custom-resources'
-import {
   ImageServiceRunner,
   RepositoryType,
+  PythonResource,
 } from '@engr-lynx/cdk-service-patterns'
 import {
-  createSourceAction,
-  createImageBuildAction,
+  SourceAction,
+  ImageBuildAction,
   createPipeline,
 } from '@engr-lynx/cdk-pipeline-builder'
 import {
@@ -35,12 +29,12 @@ import {
 } from './config'
 
 export interface WebProps extends WebConfig {
-  mpSecret: ISecret,
-  dbHost: string,
-  dbName: string,
-  dbSecret: ISecret,
-  esHost: string,
-  esSecret: ISecret,
+  readonly mpSecret: ISecret,
+  readonly dbHost: string,
+  readonly dbName: string,
+  readonly dbSecret: ISecret,
+  readonly esHost: string,
+  readonly esSecret: ISecret,
 }
 
 export class Web extends Construct {
@@ -57,14 +51,10 @@ export class Web extends Construct {
       ...webProps.pipeline.source,
       key: 'src.zip',
     }
-    const {
-      action: s3Source,
-      sourceArtifact: sourceCode,
-      source,
-    } = createSourceAction(this, sourceActionProps)
-    const bucket = source as Bucket
+    const sourceAction = new SourceAction(this, 'SourceAction', sourceActionProps)
+    const bucket = sourceAction.source as Bucket
     const sourceActions = [
-      s3Source,
+      sourceAction.action,
     ]
     const sourceStage = {
       stageName: 'Source',
@@ -83,7 +73,7 @@ export class Web extends Construct {
       port: "80",
       willAutoDeploy: true,
     })
-    const baseUrl = 'https://' + serviceRunner.service.attrServiceUrl
+    const baseUrl = 'https://' + serviceRunner.serviceUrl
     const inEnvVarArgs = {
       BASE_URL: baseUrl,
       DB_HOST: webProps.dbHost,
@@ -105,22 +95,18 @@ export class Web extends Construct {
       ADMIN_USERNAME: adminSecret.secretName + ':username',
       ADMIN_PASSWORD: adminSecret.secretName + ':password',
     }
-    const {
-      action: buildAction,
-      imageRepo,
-      grantee,
-    } = createImageBuildAction(this, {
+    const imageBuildAction = new ImageBuildAction(this, 'ImageBuildAction', {
       ...webProps.pipeline.build,
       inEnvVarArgs,
       inEnvSecretArgs,
-      sourceCode,
+      sourceCode: sourceAction.sourceCode,
     })
-    webProps.dbSecret.grantRead(grantee)
-    webProps.esSecret.grantRead(grantee)
-    webProps.mpSecret.grantRead(grantee)
-    adminSecret.grantRead(grantee)
+    webProps.dbSecret.grantRead(imageBuildAction.project)
+    webProps.esSecret.grantRead(imageBuildAction.project)
+    webProps.mpSecret.grantRead(imageBuildAction.project)
+    adminSecret.grantRead(imageBuildAction.project)
     const buildActions = [
-      buildAction,
+      imageBuildAction.action,
     ]
     const buildStage = {
       stageName: 'Build',
@@ -132,27 +118,19 @@ export class Web extends Construct {
       stages,
       restartExecutionOnUpdate: true,
     })
-    // !ToDo: Put PythonFunction + Provider + CustomResource in a module. Then, remove dependencies @aws-cdk/aws-lambda-python and @aws-cdk/custom-resources.
     const entry = join(__dirname, 'bootstrap')
-    const onEventHandler = new PythonFunction(this, 'Bootstrap', {
-      entry,
-    })
-    // ToDo: Aggregate grants to read, write and read-write
-    serviceRunner.service.grantUpdate(onEventHandler)
-    bucket.grantPut(onEventHandler)
-    const provider = new Provider(this, 'BootstrapProvider', {
-      onEventHandler,
-    })
     const properties = {
-      serviceArn: serviceRunner.service.attrServiceArn,
-      imageRepo: imageRepo.repositoryUri,
+      serviceArn: serviceRunner.serviceArn,
+      imageRepo: imageBuildAction.repo.repositoryUri,
       srcBucket: bucket.bucketName,
       srcKey: sourceActionProps.key,
     }
-    const bootstrapResource = new CustomResource(this, 'BootstrapResource', {
-      serviceToken: provider.serviceToken,
+    const bootstrapResource = new PythonResource(this, 'BootstrapResource', {
+      entry,
       properties,
     })
+    serviceRunner.grantWrite(bootstrapResource)
+    bucket.grantPut(bootstrapResource)
     // This custom resource will trigger pipeline. Hence the latter needs to be fully created first.
     bootstrapResource.node.addDependency(pipeline)
   }
