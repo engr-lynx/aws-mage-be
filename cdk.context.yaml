@@ -7,14 +7,19 @@ app:
       name: magento
       username: magento
       deleteWithApp: true
+      instance: t4g.medium
       network:
         azCount: 2
     es:
       username: magento
       deleteWithApp: true
+      instance: t3.medium.elasticsearch
     web:
       admin:
         secretName: MagentoAdminDetails
+      instance:
+        cpu: '1 vCPU'
+        memory: '2 GB'
       pipeline:
         deleteArtifactsWithApp: true
         source:

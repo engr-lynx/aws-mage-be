@@ -21,14 +21,15 @@ export class Es extends Construct {
   public readonly host: string
   public readonly secret: ISecret
 
-  constructor(scope: Construct, id: string, esProps: EsProps) {
+  constructor(scope: Construct, id: string, props: EsProps) {
     super(scope, id)
-    // ToDo: Use application autoscaling?!
-    // ToDo: Right-size ES instance (to t3.medium.elasticsearch). Does this hasten the build?
-    // ToDo: Does using a VPC (esp default) hasten the build?
-    // ToDo: Does useUnsignedBasicAuth make the build slower? 
+    // !ToDo(1): Does using a VPC (esp default) hasten the build?
+    // !ToDo(3): Does useUnsignedBasicAuth make the build slower? If so, can App Runner Role be created to access this?
+    const capacity = {
+      dataNodeInstanceType: props.instance,
+    }
     const secretStringTemplate = JSON.stringify({
-      username: esProps.username,
+      username: props.username,
     })
     const generateSecretString = {
       excludeCharacters: '" %+=~`@#$^&()|[]{}:;,<>?!\'\\/)*',
@@ -43,9 +44,10 @@ export class Es extends Construct {
       masterUserName: this.secret.secretValueFromJson('username').toString(),
       masterUserPassword: this.secret.secretValueFromJson('password'),
     }
-    const removalPolicy = esProps.deleteWithApp ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
+    const removalPolicy = props.deleteWithApp ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     const domain = new Domain(this, 'Domain', {
       version: ElasticsearchVersion.V7_9,
+      capacity,
       useUnsignedBasicAuth: true,
       fineGrainedAccessControl,
       removalPolicy,

@@ -22,19 +22,19 @@ import {
 export interface BackEndProps extends StackProps, ServicesConfig {}
 
 export class BackEndStack extends Stack {
-  constructor(scope: Construct, id: string, backEndProps: BackEndProps) {
-    super(scope, id, backEndProps)
+  constructor(scope: Construct, id: string, props: BackEndProps) {
+    super(scope, id, props)
     const mp = new Mp(this, 'Mp', {
-      ...backEndProps.mp,
+      ...props.mp,
     })
     const db = new Db(this, 'Db', {
-      ...backEndProps.db,
+      ...props.db,
     })
     const es = new Es(this, 'Es', {
-      ...backEndProps.es,
+      ...props.es,
     })
     new Web(this, 'Web', {
-      ...backEndProps.web,
+      ...props.web,
       mpSecret: mp.secret,
       dbHost: db.host,
       dbName: db.name,

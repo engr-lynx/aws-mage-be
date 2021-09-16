@@ -15,9 +15,9 @@ export class Mp extends Construct {
 
   public readonly secret: ISecret
 
-  constructor(scope: Construct, id: string, mpProps: MpProps) {
+  constructor(scope: Construct, id: string, props: MpProps) {
     super(scope, id)
-    this.secret = Secret.fromSecretNameV2(this, 'Credentials', mpProps.secretName)
+    this.secret = Secret.fromSecretNameV2(this, 'Credentials', props.secretName)
   }
 
 }

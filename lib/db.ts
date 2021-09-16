@@ -7,6 +7,7 @@ import {
   ISecret,
 } from '@aws-cdk/aws-secretsmanager'
 import {
+  InstanceType,
   Vpc,
   SubnetType,
   SecurityGroup,
@@ -31,22 +32,24 @@ export class Db extends Construct {
   public readonly name: string
   public readonly secret: ISecret
 
-  constructor(scope: Construct, id: string, dbProps: DbProps) {
+  constructor(scope: Construct, id: string, props: DbProps) {
     super(scope, id)
     // ToDo: Use ServerlessCluster?!
-    // ToDo: Right-size DB instance (to db.t4g.medium).
-    // ToDo: Does using the default VPC hasten the build?
-    // ToDo: Minimize the VPC.
+    // !ToDo(1): Does using the default VPC hasten the build?
+    // !ToDo(1): Minimize the VPC.
     const engine = DatabaseClusterEngine.auroraMysql({
       version: AuroraMysqlEngineVersion.of('5.7.mysql_aurora.2.09.2'),
     })
+    const instanceType = props.instance ?
+      new InstanceType(props.instance) :
+      undefined 
     const subnetType = SubnetType.PUBLIC
     const publicSubnetConfig = {
       name: 'Public',
       subnetType,
     }
     const vpc = new Vpc(this, 'Vpc', {
-      maxAzs: dbProps.network.azCount,
+      maxAzs: props.network?.azCount,
       subnetConfiguration: [
         publicSubnetConfig,
       ],
@@ -59,14 +62,15 @@ export class Db extends Construct {
     })
     sg.addIngressRule(Peer.anyIpv4(), Port.tcp(3306))
     const securityGroups = [sg]
-    // ToDo: There is a publiclyAccessible property instead of vpc config?
+    // !ToDo(1): There is a publiclyAccessible property instead of vpc config?
     const instanceProps = {
+      instanceType,
       vpc,
       vpcSubnets,
       securityGroups,
     }
     const secretStringTemplate = JSON.stringify({
-      username: dbProps.username,
+      username: props.username,
     })
     const generateSecretString = {
       excludeCharacters: '" %+=~`@#$^&()|[]{}:;,<>?!\'\\/)*',
@@ -78,8 +82,8 @@ export class Db extends Construct {
       generateSecretString,
     })
     const credentials = Credentials.fromSecret(this.secret)
-    this.name = dbProps.name
-    const removalPolicy = dbProps.deleteWithApp ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
+    this.name = props.name
+    const removalPolicy = props.deleteWithApp ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN
     const cluster = new DatabaseCluster(this, 'Cluster', {
       engine,
       instanceProps,

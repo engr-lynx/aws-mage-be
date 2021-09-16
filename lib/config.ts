@@ -13,21 +13,29 @@ export interface NetworkConfig {
 export interface DbConfig {
   readonly name: string,
   readonly username: string,
-  readonly deleteWithApp: boolean,
-  readonly network: NetworkConfig,
+  readonly deleteWithApp?: boolean,
+  readonly instance?: string,
+  readonly network?: NetworkConfig,
 }
 
 export interface EsConfig {
   readonly username: string,
-  readonly deleteWithApp: boolean,
+  readonly deleteWithApp?: boolean,
+  readonly instance?: string,
 }
 
 interface AdminConfig {
   readonly secretName: string,
 }
 
+interface ContInstance {
+  readonly cpu?: string,
+  readonly memory?: string,
+}
+
 export interface WebConfig extends DeployableAppConfig {
   readonly admin: AdminConfig,
+  readonly instance?: ContInstance,
 }
 
 export interface ServicesConfig {

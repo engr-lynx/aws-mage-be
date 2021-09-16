@@ -39,16 +39,14 @@ export interface WebProps extends WebConfig {
 
 export class Web extends Construct {
 
-  // ToDo: Split the process into: (1) bootstrap pipeline that creates the project and (2) standard CI/CD pipeline that builds and deploys it.
-  // ToDo: Separate service runner creation from the creation of the pipelines.
-  // ToDo: Is there a way to self-destroy bootstrap pipeline after successful execution?
-  // ToDo: Transfer update_service_image_id to end of bootstrap pipeline to make sure ECR already has an image.
-  // ToDo: Right-size App Runner instance (to 1 vCPU & 2GB).
-  constructor(scope: Construct, id: string, webProps: WebProps) {
+  // !ToDo(2): Split the process into: (1) bootstrap pipeline that creates the project and (2) standard CI/CD pipeline that builds and deploys it. Then, separate service runner creation from the creation of the pipelines? Finally, is there a way to self-destroy bootstrap pipeline after successful execution?
+  // !ToDo(2): Use a code repo w/ created project containing sample data to reduce build time. Will need composer to install dependencies.
+  // !ToDo(2): Transfer update_service_image_id to end of bootstrap pipeline to make sure ECR already has an image (base-image if needed).
+  constructor(scope: Construct, id: string, props: WebProps) {
     super(scope, id)
     const stages = []
     const sourceActionProps = {
-      ...webProps.pipeline.source,
+      ...props.pipeline.source,
       key: 'src.zip',
     }
     const sourceAction = new SourceAction(this, 'SourceAction', sourceActionProps)
@@ -72,22 +70,24 @@ export class Web extends Construct {
       imageId,
       port: "80",
       willAutoDeploy: true,
+      cpu: props?.instance?.cpu,
+      memory: props?.instance?.memory,
     })
     const baseUrl = 'https://' + serviceRunner.serviceUrl
     const inEnvVarArgs = {
       BASE_URL: baseUrl,
-      DB_HOST: webProps.dbHost,
-      DB_NAME: webProps.dbName,
-      ES_HOST: webProps.esHost,
+      DB_HOST: props.dbHost,
+      DB_NAME: props.dbName,
+      ES_HOST: props.esHost,
     }
-    const adminSecret = Secret.fromSecretNameV2(this, 'AdminDetails', webProps.admin.secretName)
+    const adminSecret = Secret.fromSecretNameV2(this, 'AdminDetails', props.admin.secretName)
     const inEnvSecretArgs = {
-      DB_USERNAME: webProps.dbSecret.secretName + ':username',
-      DB_PASSWORD: webProps.dbSecret.secretName + ':password',
-      ES_USERNAME: webProps.esSecret.secretName + ':username',
-      ES_PASSWORD: webProps.esSecret.secretName + ':password',
-      MP_USERNAME: webProps.mpSecret.secretName + ':username',
-      MP_PASSWORD: webProps.mpSecret.secretName + ':password',
+      DB_USERNAME: props.dbSecret.secretName + ':username',
+      DB_PASSWORD: props.dbSecret.secretName + ':password',
+      ES_USERNAME: props.esSecret.secretName + ':username',
+      ES_PASSWORD: props.esSecret.secretName + ':password',
+      MP_USERNAME: props.mpSecret.secretName + ':username',
+      MP_PASSWORD: props.mpSecret.secretName + ':password',
       ADMIN_FIRSTNAME: adminSecret.secretName + ':firstName',
       ADMIN_LASTNAME: adminSecret.secretName + ':lastName',
       ADMIN_EMAIL: adminSecret.secretName + ':email',
@@ -96,14 +96,14 @@ export class Web extends Construct {
       ADMIN_PASSWORD: adminSecret.secretName + ':password',
     }
     const imageBuildAction = new ImageBuildAction(this, 'ImageBuildAction', {
-      ...webProps.pipeline.build,
+      ...props.pipeline.build,
       inEnvVarArgs,
       inEnvSecretArgs,
       sourceCode: sourceAction.sourceCode,
     })
-    webProps.dbSecret.grantRead(imageBuildAction.project)
-    webProps.esSecret.grantRead(imageBuildAction.project)
-    webProps.mpSecret.grantRead(imageBuildAction.project)
+    props.dbSecret.grantRead(imageBuildAction.project)
+    props.esSecret.grantRead(imageBuildAction.project)
+    props.mpSecret.grantRead(imageBuildAction.project)
     adminSecret.grantRead(imageBuildAction.project)
     const buildActions = [
       imageBuildAction.action,
@@ -114,7 +114,7 @@ export class Web extends Construct {
     }
     stages.push(buildStage)
     const pipeline = createPipeline(this, {
-      ...webProps.pipeline,
+      ...props.pipeline,
       stages,
       restartExecutionOnUpdate: true,
     })
@@ -131,6 +131,7 @@ export class Web extends Construct {
     })
     serviceRunner.grantReadWrite(bootstrapResource)
     bucket.grantPut(bootstrapResource)
+    // !ToDo(1): Maybe this is not needed?
     // This custom resource will trigger pipeline. Hence the latter needs to be fully created first.
     bootstrapResource.node.addDependency(pipeline)
   }

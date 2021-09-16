@@ -13,6 +13,11 @@ import {
 const app = new App()
 const appContext = app.node.tryGetContext('app')
 const appConfig = appContext as AppConfig
+const env = {
+  region: process.env.CDK_DEFAULT_REGION,
+  account: process.env.CDK_DEFAULT_ACCOUNT,
+}
 new BackEndStack(app, appConfig.name, {
   ...appConfig.services,
+  env,
 })
