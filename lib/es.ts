@@ -35,13 +35,11 @@ export class Es extends Construct {
     const vpc = Vpc.fromLookup(this, 'DefaultVpc', {
       isDefault: true,
     })
-    const availabilityZones = Stack.of(this).availabilityZones
-    const vpcSubnets = availabilityZones.map(az => {
-      return {
-        availabilityZones: [az],
-        subnetType: SubnetType.PUBLIC,
-      }
-    })
+    const az = Stack.of(this).availabilityZones[0]
+    const vpcSubnets = [{
+      availabilityZones: [az],
+      subnetType: SubnetType.PUBLIC,
+    }]
     const secretStringTemplate = JSON.stringify({
       username: props.username,
     })
