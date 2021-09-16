@@ -10,9 +10,6 @@ import {
   InstanceType,
   Vpc,
   SubnetType,
-  SecurityGroup,
-  Peer,
-  Port,
 } from '@aws-cdk/aws-ec2'
 import {
   DatabaseCluster,
@@ -35,39 +32,22 @@ export class Db extends Construct {
   constructor(scope: Construct, id: string, props: DbProps) {
     super(scope, id)
     // ToDo: Use ServerlessCluster?!
-    // !ToDo(1): Does using the default VPC hasten the build?
-    // !ToDo(1): Minimize the VPC.
     const engine = DatabaseClusterEngine.auroraMysql({
       version: AuroraMysqlEngineVersion.of('5.7.mysql_aurora.2.09.2'),
     })
     const instanceType = props.instance ?
       new InstanceType(props.instance) :
-      undefined 
-    const subnetType = SubnetType.PUBLIC
-    const publicSubnetConfig = {
-      name: 'Public',
-      subnetType,
-    }
-    const vpc = new Vpc(this, 'Vpc', {
-      maxAzs: props.network?.azCount,
-      subnetConfiguration: [
-        publicSubnetConfig,
-      ],
+      undefined
+    const vpc = Vpc.fromLookup(this, 'DefaultVpc', {
+      isDefault: true,
     })
     const vpcSubnets = {
-      subnetType,
+      subnetType: SubnetType.PUBLIC,
     }
-    const sg = new SecurityGroup(this, 'Sg', {
-      vpc,
-    })
-    sg.addIngressRule(Peer.anyIpv4(), Port.tcp(3306))
-    const securityGroups = [sg]
-    // !ToDo(1): There is a publiclyAccessible property instead of vpc config?
     const instanceProps = {
       instanceType,
       vpc,
       vpcSubnets,
-      securityGroups,
     }
     const secretStringTemplate = JSON.stringify({
       username: props.username,

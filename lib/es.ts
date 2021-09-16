@@ -7,6 +7,10 @@ import {
   ElasticsearchVersion,
 } from '@aws-cdk/aws-elasticsearch'
 import {
+  Vpc,
+  SubnetType,
+} from '@aws-cdk/aws-ec2'
+import {
   Secret,
   ISecret,
 } from '@aws-cdk/aws-secretsmanager'
@@ -23,11 +27,16 @@ export class Es extends Construct {
 
   constructor(scope: Construct, id: string, props: EsProps) {
     super(scope, id)
-    // !ToDo(1): Does using a VPC (esp default) hasten the build?
     // !ToDo(3): Does useUnsignedBasicAuth make the build slower? If so, can App Runner Role be created to access this?
     const capacity = {
       dataNodeInstanceType: props.instance,
     }
+    const vpc = Vpc.fromLookup(this, 'DefaultVpc', {
+      isDefault: true,
+    })
+    const vpcSubnets = [{
+      subnetType: SubnetType.PUBLIC,
+    }]
     const secretStringTemplate = JSON.stringify({
       username: props.username,
     })
@@ -48,6 +57,8 @@ export class Es extends Construct {
     const domain = new Domain(this, 'Domain', {
       version: ElasticsearchVersion.V7_9,
       capacity,
+      vpc,
+      vpcSubnets,
       useUnsignedBasicAuth: true,
       fineGrainedAccessControl,
       removalPolicy,
