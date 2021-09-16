@@ -10,6 +10,9 @@ import {
   InstanceType,
   Vpc,
   SubnetType,
+  SecurityGroup,
+  Port,
+  Peer,
 } from '@aws-cdk/aws-ec2'
 import {
   DatabaseCluster,
@@ -44,10 +47,16 @@ export class Db extends Construct {
     const vpcSubnets = {
       subnetType: SubnetType.PUBLIC,
     }
+    const sg = new SecurityGroup(this, 'Sg', {
+      vpc,
+    })
+    sg.addIngressRule(Peer.anyIpv4(), Port.tcp(3306))
+    const securityGroups = [sg]
     const instanceProps = {
       instanceType,
       vpc,
       vpcSubnets,
+      securityGroups,
     }
     const secretStringTemplate = JSON.stringify({
       username: props.username,
