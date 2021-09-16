@@ -1,5 +1,6 @@
 import {
   Construct,
+  Stack,
   RemovalPolicy,
 } from '@aws-cdk/core'
 import {
@@ -34,9 +35,13 @@ export class Es extends Construct {
     const vpc = Vpc.fromLookup(this, 'DefaultVpc', {
       isDefault: true,
     })
-    const vpcSubnets = [{
-      subnetType: SubnetType.PUBLIC,
-    }]
+    const availabilityZones = Stack.of(this).availabilityZones
+    const vpcSubnets = availabilityZones.map(az => {
+      return {
+        availabilityZones: [az],
+        subnetType: SubnetType.PUBLIC,
+      }
+    })
     const secretStringTemplate = JSON.stringify({
       username: props.username,
     })
