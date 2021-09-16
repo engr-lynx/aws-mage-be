@@ -808,9 +808,9 @@
     "@engr-lynx/cdk-service-patterns" "~0.122.0"
 
 "@engr-lynx/cdk-service-patterns@~0.122.0":
-  version "0.122.3"
-  resolved "https://registry.yarnpkg.com/@engr-lynx/cdk-service-patterns/-/cdk-service-patterns-0.122.3.tgz#031170e6be0e58bfe6222b7e130349e9118fdf76"
-  integrity sha512-bQGFzboCVMDR/6xm89f/P0WXl4vOyS+5mz7udABl53wKBVsanUl6fDNL2LLjYGnaWpDkYTN+k01uBK6yY0XcBQ==
+  version "0.122.4"
+  resolved "https://registry.yarnpkg.com/@engr-lynx/cdk-service-patterns/-/cdk-service-patterns-0.122.4.tgz#d5fb177e879daeb3182414cc48ad823f8c89037c"
+  integrity sha512-3mQChSD0Iuq0Guy9WL4CSZUyZb2H/CuOuex/S44F9QTy6+y0eOSMCL4wFCfaFIyk3DBc5/c+Ct0Y7EtBmF+HKA==
   dependencies:
     "@aws-cdk/aws-apprunner" "1.122.0"
     "@aws-cdk/aws-cloudfront" "1.122.0"

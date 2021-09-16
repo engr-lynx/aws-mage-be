@@ -131,6 +131,8 @@ export class Web extends Construct {
     })
     serviceRunner.grantReadWrite(bootstrapResource)
     bucket.grantPut(bootstrapResource)
+    // Creation of custom resource will trigger the pipeline. Hence, the latter needs to be created before the former.
+    bootstrapResource.resource.node.addDependency(pipeline)
   }
 
 }
