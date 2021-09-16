@@ -77,6 +77,7 @@ RUN bin/magento setup:install \
     --use-rewrites=1 \
   && bin/magento cache:flush
 
+# ToDo: Fix images not showing up: https://magento.stackexchange.com/questions/255890/images-are-not-displaying-after-installation-of-sample-data-in-magento-2-3
 # Set Magento2 for production mode w/ disabled 2FA
 RUN bin/magento module:disable Magento_TwoFactorAuth \
   && bin/magento deploy:mode:set production \

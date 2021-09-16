@@ -23,7 +23,6 @@ export class Es extends Construct {
 
   constructor(scope: Construct, id: string, props: EsProps) {
     super(scope, id)
-    // !ToDo(3): Does useUnsignedBasicAuth make the build slower? If so, can App Runner Role be created to access this?
     const capacity = {
       dataNodeInstanceType: props.instance,
     }

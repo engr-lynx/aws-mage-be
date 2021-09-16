@@ -39,9 +39,9 @@ export interface WebProps extends WebConfig {
 
 export class Web extends Construct {
 
-  // !ToDo(2): Split the process into: (1) bootstrap pipeline that creates the project and (2) standard CI/CD pipeline that builds and deploys it. Then, separate service runner creation from the creation of the pipelines? Finally, is there a way to self-destroy bootstrap pipeline after successful execution?
-  // !ToDo(2): Use a code repo w/ created project containing sample data to reduce build time. Will need composer to install dependencies.
-  // !ToDo(2): Transfer update_service_image_id to end of bootstrap pipeline to make sure ECR already has an image (base-image if needed).
+  // !ToDo: Split the process into: (1) bootstrap pipeline that creates the project and (2) standard CI/CD pipeline that builds and deploys it. Then, separate service runner creation from the creation of the pipelines? Finally, is there a way to self-destroy bootstrap pipeline after successful execution?
+  // !ToDo: Use a code repo w/ created project containing sample data to reduce build time. Will need composer to install dependencies.
+  // !ToDo: Transfer update_service_image_id to end of bootstrap pipeline to make sure ECR already has an image (base-image if needed).
   constructor(scope: Construct, id: string, props: WebProps) {
     super(scope, id)
     const stages = []
