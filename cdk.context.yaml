@@ -8,8 +8,6 @@ app:
       username: magento
       deleteWithApp: true
       instance: t4g.medium
-      network:
-        azCount: 2
     es:
       username: magento
       deleteWithApp: true

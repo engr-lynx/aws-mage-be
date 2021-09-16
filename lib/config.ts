@@ -6,16 +6,11 @@ export interface MpConfig {
   readonly secretName: string,
 }
 
-export interface NetworkConfig {
-  readonly azCount?: number,
-}
-
 export interface DbConfig {
   readonly name: string,
   readonly username: string,
   readonly deleteWithApp?: boolean,
   readonly instance?: string,
-  readonly network?: NetworkConfig,
 }
 
 export interface EsConfig {
