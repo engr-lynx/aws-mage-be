@@ -29,7 +29,6 @@ import {
 } from './config'
 
 export interface WebProps extends WebConfig {
-  readonly mpSecret: ISecret,
   readonly dbHost: string,
   readonly dbName: string,
   readonly dbSecret: ISecret,
@@ -80,14 +79,15 @@ export class Web extends Construct {
       DB_NAME: props.dbName,
       ES_HOST: props.esHost,
     }
-    const adminSecret = Secret.fromSecretNameV2(this, 'AdminDetails', props.admin.secretName)
+    const adminSecret = Secret.fromSecretNameV2(this, 'AdminDetails', props.adminSecretName)
+    const mpSecret = Secret.fromSecretNameV2(this, 'MpCredentials', props.mpSecretName)
     const inEnvSecretArgs = {
       DB_USERNAME: props.dbSecret.secretName + ':username',
       DB_PASSWORD: props.dbSecret.secretName + ':password',
       ES_USERNAME: props.esSecret.secretName + ':username',
       ES_PASSWORD: props.esSecret.secretName + ':password',
-      MP_USERNAME: props.mpSecret.secretName + ':username',
-      MP_PASSWORD: props.mpSecret.secretName + ':password',
+      MP_USERNAME: mpSecret.secretName + ':username',
+      MP_PASSWORD: mpSecret.secretName + ':password',
       ADMIN_FIRSTNAME: adminSecret.secretName + ':firstName',
       ADMIN_LASTNAME: adminSecret.secretName + ':lastName',
       ADMIN_EMAIL: adminSecret.secretName + ':email',
@@ -103,7 +103,7 @@ export class Web extends Construct {
     })
     props.dbSecret.grantRead(imageBuildAction.project)
     props.esSecret.grantRead(imageBuildAction.project)
-    props.mpSecret.grantRead(imageBuildAction.project)
+    mpSecret.grantRead(imageBuildAction.project)
     adminSecret.grantRead(imageBuildAction.project)
     const buildActions = [
       imageBuildAction.action,

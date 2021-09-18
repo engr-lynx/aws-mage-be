@@ -2,10 +2,6 @@ import {
   DeployableAppConfig,
 } from '@engr-lynx/cdk-pipeline-builder'
 
-export interface MpConfig {
-  readonly secretName: string,
-}
-
 export interface DbConfig {
   readonly name: string,
   readonly username: string,
@@ -19,22 +15,18 @@ export interface EsConfig {
   readonly instance?: string,
 }
 
-interface AdminConfig {
-  readonly secretName: string,
-}
-
 interface ContInstance {
   readonly cpu?: string,
   readonly memory?: string,
 }
 
 export interface WebConfig extends DeployableAppConfig {
-  readonly admin: AdminConfig,
+  readonly adminSecretName: string,
+  readonly mpSecretName: string,
   readonly instance?: ContInstance,
 }
 
-export interface ServicesConfig {
-  readonly mp: MpConfig,
+export interface ComponentsConfig {
   readonly db: DbConfig,
   readonly es: EsConfig,
   readonly web: WebConfig,
@@ -42,5 +34,5 @@ export interface ServicesConfig {
 
 export interface AppConfig {
   readonly name: string,
-  readonly services: ServicesConfig,
+  readonly components: ComponentsConfig,
 }

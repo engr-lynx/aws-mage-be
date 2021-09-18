@@ -1,8 +1,6 @@
 app:
   name: Magento
-  services:
-    mp:
-      secretName: MagentoMarketplaceCredentials
+  components:
     db:
       name: magento
       username: magento
@@ -13,8 +11,8 @@ app:
       deleteWithApp: true
       instance: t3.medium.elasticsearch
     web:
-      admin:
-        secretName: MagentoAdminDetails
+      adminSecretName: MagentoAdminDetails
+      mpSecretName: MagentoMarketplaceCredentials
       instance:
         cpu: '1 vCPU'
         memory: '2 GB'

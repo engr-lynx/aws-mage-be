@@ -4,9 +4,6 @@ import {
   StackProps,
 } from '@aws-cdk/core'
 import {
-  Mp,
-} from './mp'
-import {
   Db,
 } from './db'
 import {
@@ -16,17 +13,14 @@ import {
   Web,
 } from './web'
 import {
-  ServicesConfig,
+  ComponentsConfig,
 } from './config'
 
-export interface BackEndProps extends StackProps, ServicesConfig {}
+export interface BackEndProps extends StackProps, ComponentsConfig {}
 
 export class BackEndStack extends Stack {
   constructor(scope: Construct, id: string, props: BackEndProps) {
     super(scope, id, props)
-    const mp = new Mp(this, 'Mp', {
-      ...props.mp,
-    })
     const db = new Db(this, 'Db', {
       ...props.db,
     })
@@ -35,7 +29,6 @@ export class BackEndStack extends Stack {
     })
     new Web(this, 'Web', {
       ...props.web,
-      mpSecret: mp.secret,
       dbHost: db.host,
       dbName: db.name,
       dbSecret: db.secret,
