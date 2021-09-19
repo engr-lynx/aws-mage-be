@@ -15,15 +15,24 @@ import {
   Bucket,
 } from '@aws-cdk/aws-s3'
 import {
+  PythonFunction,
+} from '@aws-cdk/aws-lambda-python'
+import {
   ImageServiceRunner,
   RepositoryType,
-  PythonResource,
 } from '@engr-lynx/cdk-service-patterns'
 import {
   SourceAction,
   ImageBuildAction,
   createPipeline,
 } from '@engr-lynx/cdk-pipeline-builder'
+import {
+  ECRDeployment,
+  DockerImageName,
+} from 'cdk-ecr-deployment'
+import {
+  AfterCreate,
+} from 'cdk-triggers'
 import {
   WebConfig,
 } from './config'
@@ -105,6 +114,27 @@ export class Web extends Construct {
     props.esSecret.grantRead(imageBuildAction.project)
     mpSecret.grantRead(imageBuildAction.project)
     adminSecret.grantRead(imageBuildAction.project)
+    const src = new DockerImageName(baseImage.imageUri)
+    const dest = new DockerImageName(imageBuildAction.repo.repositoryUri)
+    const baseImageEcr = new ECRDeployment(this, 'BaseImageEcr', {
+      src,
+      dest,
+    })
+    const runnerUpdateEntry = join(__dirname, 'runner-update')
+    const runnerUpdateHandler = new PythonFunction(this, 'RunnerUpdateHandler', {
+      entry: runnerUpdateEntry,
+    })
+    serviceRunner.grantReadWrite(runnerUpdateHandler)
+    runnerUpdateHandler.addEnvironment('SERVICE_ARN', serviceRunner.serviceArn)
+    runnerUpdateHandler.addEnvironment('IMAGE_REPO', imageBuildAction.repo.repositoryUri)
+    const runnerUpdateDependencies = [
+      serviceRunner,
+      baseImageEcr,
+    ]
+    new AfterCreate(this, 'RunnerUpdate', {
+      resources: runnerUpdateDependencies,
+      handler: runnerUpdateHandler,
+    })
     const buildActions = [
       imageBuildAction.action,
     ]
@@ -118,21 +148,20 @@ export class Web extends Construct {
       stages,
       restartExecutionOnUpdate: true,
     })
-    const entry = join(__dirname, 'bootstrap')
-    const properties = {
-      serviceArn: serviceRunner.serviceArn,
-      imageRepo: imageBuildAction.repo.repositoryUri,
-      srcBucket: bucket.bucketName,
-      srcKey: sourceActionProps.key,
-    }
-    const bootstrapResource = new PythonResource(this, 'BootstrapResource', {
-      entry,
-      properties,
+    const bootstrapEntry = join(__dirname, 'bootstrap')
+    const bootstrapHandler = new PythonFunction(this, 'BootstrapHandler', {
+      entry: bootstrapEntry,
     })
-    serviceRunner.grantReadWrite(bootstrapResource)
-    bucket.grantPut(bootstrapResource)
-    // Creation of custom resource will trigger the pipeline. Hence, the latter needs to be created before the former.
-    bootstrapResource.resource.node.addDependency(pipeline)
+    bucket.grantPut(bootstrapHandler)
+    bootstrapHandler.addEnvironment('SRC_BUCKET', bucket.bucketName)
+    bootstrapHandler.addEnvironment('SRC_KEY', sourceActionProps.key)
+    const bootstrapDependencies = [
+      pipeline,
+    ]
+    new AfterCreate(this, 'Bootstrap', {
+      resources: bootstrapDependencies,
+      handler: bootstrapHandler,
+    })
   }
 
 }
