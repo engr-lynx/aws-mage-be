@@ -85,7 +85,7 @@ export class Web extends Construct {
       src,
       dest,
     })
-    const imageId = imageRepo.repositoryUri
+    const imageId = imageRepo.repositoryUri + ':latest'
     // ToDo: Allow other settings.
     const serviceRunner = new ImageServiceRunner(this, 'ServiceRunner', {
       repositoryType: RepositoryType.ECR,
