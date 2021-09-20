@@ -13,13 +13,11 @@ app:
     web:
       adminSecretName: MagentoAdminDetails
       mpSecretName: MagentoMarketplaceCredentials
+      deleteRepoWithApp: true
       instance:
         cpu: '1 vCPU'
         memory: '2 GB'
       pipeline:
         deleteArtifactsWithApp: true
         source:
-          type: S3
           deleteSourceWithApp: true
-        build:
-          deleteRepoWithApp: true
