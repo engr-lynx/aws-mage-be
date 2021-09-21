@@ -131,7 +131,7 @@ SECRET_FILE=secret.json
 SECRET_NAME=$( \
   cat cdk.context.json \
   | jq -r \
-    '.app.components.web.mp.secretName' \
+    '.app.components.web.mpSecretName' \
   )
 jq --null-input \
   --arg username "${MP_USERNAME}" \
@@ -155,7 +155,7 @@ SECRET_FILE=secret.json
 SECRET_NAME=$( \
   cat cdk.context.json \
   | jq -r \
-    '.app.components.web.admin.secretName' \
+    '.app.components.web.adminSecretName' \
 )
 jq --null-input \
   --arg firstName "${ADMIN_FIRST_NAME}" \
