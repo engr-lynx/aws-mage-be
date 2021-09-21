@@ -11,13 +11,13 @@ app:
       deleteWithApp: true
       instance: t3.medium.elasticsearch
     web:
+      sourceRepo: https://github.com/engr-lynx/mage-cont.git
+      repoName: mage-cont
       adminSecretName: MagentoAdminDetails
       mpSecretName: MagentoMarketplaceCredentials
-      deleteRepoWithApp: true
+      deleteImageRepoWithApp: true
       instance:
         cpu: '1 vCPU'
         memory: '2 GB'
       pipeline:
         deleteArtifactsWithApp: true
-        source:
-          deleteSourceWithApp: true

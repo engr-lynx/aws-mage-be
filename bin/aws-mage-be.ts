@@ -10,6 +10,7 @@ import {
   BackEndStack,
 } from '../lib/back-end-stack'
 
+// ToDo: Use CDK nag (https://www.npmjs.com/package/cdk-nag).
 const app = new App()
 const appContext = app.node.tryGetContext('app')
 const appConfig = appContext as AppConfig
