@@ -13,6 +13,9 @@ import {
   ISecret,
 } from '@aws-cdk/aws-secretsmanager'
 import {
+  PythonFunction,
+} from '@aws-cdk/aws-lambda-python'
+import {
   StackRemovableRepository,
   ImageServiceRunner,
   RepositoryType,
@@ -21,7 +24,7 @@ import {
   SourceAction,
   SourceType,
   ImageBuildAction,
-  createPipeline,
+  StartablePipeline,
 } from '@engr-lynx/cdk-pipeline-builder'
 import {
   ForkedRepository,
@@ -30,6 +33,9 @@ import {
   ECRDeployment,
   DockerImageName,
 } from 'cdk-ecr-deployment'
+import {
+  AfterCreate,
+} from 'cdk-triggers'
 import {
   WebConfig,
 } from './config'
@@ -131,10 +137,23 @@ export class Web extends Construct {
       actions: buildActions,
     }
     stages.push(buildStage)
-    createPipeline(this, {
+    const pipeline = new StartablePipeline(this, 'Pipeline', {
       ...props.pipeline,
       stages,
       restartExecutionOnUpdate: true,
+    })
+    const entry = join(__dirname, 'start-pipeline')
+    const handler = new PythonFunction(this, 'Handler', {
+      entry,
+    })
+    pipeline.grantStart(handler)
+    handler.addEnvironment('PIPELINE_NAME', pipeline.pipelineName)
+    const resources = [
+      pipeline,
+    ]
+    new AfterCreate(this, 'StartPipeline', {
+      resources,
+      handler,
     })
   }
 
