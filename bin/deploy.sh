@@ -59,11 +59,11 @@ echo "store back-end admin username: ${ADMIN_USERNAME}"
 echo "store back-end admin password: ${ADMIN_PASSWORD}"
 echo "Magento Marketplace public key: ${MP_USERNAME}"
 echo "Magento Marketplace private key: ${MP_PASSWORD}"
-while [ "${PROCEED}" != 'y' ]; do
+while [ "${PROCEED}" != "y" ]; do
   read -p "Proceed? (y/n): " PROCEED
-  if [ "${PROCEED}" != 'y' ]; then
-    read -p "You'll be exited. You can rerun the script though. Are you sure you don't want to proceed? (y/n)" CONFIRM
-    if [ "${CONFIRM}" == 'y' ]; then
+  if [ "${PROCEED}" != "y" ]; then
+    read -p "You'll be exited. You can rerun the script though. Are you sure you want to abort? (y/n): " CONFIRM
+    if [ "${CONFIRM}" = "y" ]; then
       exit 1
     fi
   fi
@@ -105,7 +105,7 @@ if [ ${VOL_SIZE} -lt ${SIZE_TARGET} ]; then
       aws ec2 describe-volumes-modifications --volume-id ${VOL_ID} \
       | jq -r \
         '.VolumesModifications[0].ModificationState' \
-    ) == "optimizing" \
+    ) = "optimizing" \
   ]; do
     sleep 1
   done
@@ -116,10 +116,10 @@ DEV="/dev/nvme0n1"
 PART=${DEV}"p1"
 FS=$(df -hT | grep ${PART} | awk '{ print $2 }')
 sudo growpart ${DEV} 1
-if [ "${FS}" == "xfs" ]; then
+if [ "${FS}" = "xfs" ]; then
   sudo xfs_growfs -d /
 fi
-if [ "${FS}" == "ext4" ]; then
+if [ "${FS}" = "ext4" ]; then
   sudo resize2fs ${PART}
 fi
 
