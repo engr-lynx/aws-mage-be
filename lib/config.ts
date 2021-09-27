@@ -23,9 +23,10 @@ interface ContInstance {
 export interface WebConfig extends DeployableAppConfig {
   readonly sourceRepo: string
   readonly repoName: string
+  readonly deploySample?: boolean
   readonly adminSecretName: string
   readonly mpSecretName: string
-  readonly deleteImageRepoWithApp: boolean
+  readonly deleteImageRepoWithApp?: boolean
   readonly instance?: ContInstance
 }
 

@@ -96,8 +96,10 @@ export class Web extends Construct {
     })
     serviceRunner.node.addDependency(baseImageEcr)
     const baseUrl = 'https://' + serviceRunner.serviceUrl
+    const deploySample = props.deploySample ?? false
     const inEnvVarArgs = {
       BASE_URL: baseUrl,
+      DEPLOY_SAMPLE: deploySample.toString(),
       DB_HOST: props.dbHost,
       DB_NAME: props.dbName,
       ES_HOST: props.esHost,
