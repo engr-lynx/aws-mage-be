@@ -11,24 +11,24 @@
   },
   "devDependencies": {
     "@types/node": "^16.7.10",
-    "aws-cdk": "1.124.0",
+    "aws-cdk": "1.125.0",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.2",
     "yaml2json": "^1.0.2"
   },
   "dependencies": {
-    "@aws-cdk/aws-ec2": "1.124.0",
-    "@aws-cdk/aws-ecr-assets": "1.124.0",
-    "@aws-cdk/aws-elasticsearch": "1.124.0",
-    "@aws-cdk/aws-lambda-python": "1.124.0",
-    "@aws-cdk/aws-rds": "1.124.0",
-    "@aws-cdk/aws-secretsmanager": "1.124.0",
-    "@aws-cdk/core": "1.124.0",
-    "@engr-lynx/cdk-forked-codecommit": "^0.124.1",
-    "@engr-lynx/cdk-pipeline-builder": "^0.124.0",
-    "@engr-lynx/cdk-service-patterns": "^0.124.0",
-    "cdk-ecr-deployment": "^0.0.74",
-    "cdk-triggers": "^0.0.120",
+    "@aws-cdk/aws-ec2": "1.125.0",
+    "@aws-cdk/aws-ecr-assets": "1.125.0",
+    "@aws-cdk/aws-elasticsearch": "1.125.0",
+    "@aws-cdk/aws-lambda-python": "1.125.0",
+    "@aws-cdk/aws-rds": "1.125.0",
+    "@aws-cdk/aws-secretsmanager": "1.125.0",
+    "@aws-cdk/core": "1.125.0",
+    "@engr-lynx/cdk-forked-codecommit": "^0.125.0",
+    "@engr-lynx/cdk-pipeline-builder": "^0.125.0",
+    "@engr-lynx/cdk-service-patterns": "^0.125.0",
+    "cdk-ecr-deployment": "^0.0.75",
+    "cdk-triggers": "^0.0.125",
     "source-map-support": "^0.5.16"
   }
 }

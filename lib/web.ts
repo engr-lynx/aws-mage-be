@@ -106,19 +106,31 @@ export class Web extends Construct {
     }
     const adminSecret = Secret.fromSecretNameV2(this, 'AdminDetails', props.adminSecretName)
     const mpSecret = Secret.fromSecretNameV2(this, 'MpCredentials', props.mpSecretName)
+    const dbUsername = props.dbSecret.secretName + ':username'
+    const dbPassword = props.dbSecret.secretName + ':password'
+    const esUsername = props.esSecret.secretName + ':username'
+    const esPassword = props.esSecret.secretName + ':password'
+    const mpUsername = mpSecret.secretName + ':username'
+    const mpPassword = mpSecret.secretName + ':password'
+    const adminFirstName = adminSecret.secretName + ':firstName'
+    const adminLastName = adminSecret.secretName + ':lastName'
+    const adminEmail = adminSecret.secretName + ':email'
+    const adminUrlPath = adminSecret.secretName + ':urlPath'
+    const adminUsername = adminSecret.secretName + ':username'
+    const adminPassword = adminSecret.secretName + ':password'
     const inEnvSecretArgs = {
-      DB_USERNAME: props.dbSecret.secretName + ':username',
-      DB_PASSWORD: props.dbSecret.secretName + ':password',
-      ES_USERNAME: props.esSecret.secretName + ':username',
-      ES_PASSWORD: props.esSecret.secretName + ':password',
-      MP_USERNAME: mpSecret.secretName + ':username',
-      MP_PASSWORD: mpSecret.secretName + ':password',
-      ADMIN_FIRSTNAME: adminSecret.secretName + ':firstName',
-      ADMIN_LASTNAME: adminSecret.secretName + ':lastName',
-      ADMIN_EMAIL: adminSecret.secretName + ':email',
-      ADMIN_URL_PATH: adminSecret.secretName + ':urlPath',
-      ADMIN_USERNAME: adminSecret.secretName + ':username',
-      ADMIN_PASSWORD: adminSecret.secretName + ':password',
+      DB_USERNAME: dbUsername,
+      DB_PASSWORD: dbPassword,
+      ES_USERNAME: esUsername,
+      ES_PASSWORD: esPassword,
+      MP_USERNAME: mpUsername,
+      MP_PASSWORD: mpPassword,
+      ADMIN_FIRST_NAME: adminFirstName,
+      ADMIN_LAST_NAME: adminLastName,
+      ADMIN_EMAIL: adminEmail,
+      ADMIN_URL_PATH: adminUrlPath,
+      ADMIN_USERNAME: adminUsername,
+      ADMIN_PASSWORD: adminPassword,
     }
     const imageBuildAction = new ImageBuildAction(this, 'ImageBuildAction', {
       ...props.pipeline.build,
